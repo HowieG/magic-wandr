@@ -20,6 +20,7 @@ export const config: PlasmoCSConfig = {
 import {
 	addActivityToStorage,
 	localStorageInstance,
+	processHighlightedText,
 	removeActivityFromStorage
 } from "~/lib/helpers"
 
@@ -58,7 +59,7 @@ const Highlight = () => {
 	}, [])
 
 	const handleButtonClick = () => {
-		// addActivityToStorage(selectedRange)
+		processHighlightedText(selectedRange.toString())
 		sendToBackground({
 			name: "open-sidepanel"
 		})

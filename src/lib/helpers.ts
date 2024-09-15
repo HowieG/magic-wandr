@@ -1,8 +1,27 @@
 import { Storage } from "@plasmohq/storage";
 
+
+
+
+
+const { GoogleGenerativeAI } = require("@google/generative-ai")
+
 export const localStorageInstance = new Storage({
   area: "local"
 })
+
+const genAI = new GoogleGenerativeAI(process.env.PLASMO_PUBLIC_GEMINI_API_KEY)
+
+const prompt_instructions = `
+I'm visiting San Francisco. I'm putting recommended stops on a google map.
+Please label each of the locations in these recommendations with one or multiple tags: scenic, entertainment, food, touristy, cultural.
+If the recommendation provides notes about the location include and provide an address for each if possible.
+Return the response in the exact JSON format as the example below.
+If you don't have any of the data just leave it
+
+{ name: "Land's End", neighborhood: "Outer Richmond", category: "scenic", note: "Coastal trail with stunning ocean views", lat: 37.7850, lng: -122.5060, day: "Saturday", userNotes: ["Watch the sunset from the Sutro Baths ruins", "Hike the Coastal Trail for breathtaking views"], sources: ["sftravel.com", "nps.gov"] },
+	
+`
 
 export async function init() {
   let activities: Activity[] | null =
@@ -53,6 +72,19 @@ export async function addSelectedActivityToStorage(
   //     "to storage. New selected_activities: ",
   //     aSelectedActivity
   //   )
+}
+
+export async function processHighlightedText(text: string) {
+  // Use gemini-pro model for text-only input
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  // Shortened for legibility. See "Write an effective prompt" for
+  // writing an actual production-ready prompt.
+  const prompt = `${prompt_instructions}\n\n${text}`
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  const response_text = response.text();
+  console.log(response_text)
+  return response_text;
 }
 
 export async function addActivityToStorage(oActivity: Activity, pending = false) {

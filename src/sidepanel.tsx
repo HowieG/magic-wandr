@@ -29,7 +29,7 @@ const categoryStyles = {
 	cultural: { shadow: "shadow-[0_4px_10px_rgba(66,153,225,0.5)]", border: "border-l-[3px] border-blue-500" },
 }
 
-function SidebarComponent() {
+function IndexSidePanel() {
 	return (
 		<div className="flex h-screen">
 			<div className="w-full h-screen overflow-y-auto bg-gray-900 shadow-lg font-['Poppins',sans-serif]">
@@ -102,4 +102,4 @@ function SidebarComponent() {
 	)
 }
 
-export default SidebarComponent
+export default IndexSidePanel

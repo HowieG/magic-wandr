@@ -1,10 +1,12 @@
 import type { PlasmoMessaging } from "@plasmohq/messaging"
 
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
+  console.log("sidepanel opened")
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     // @ts-ignore
     chrome.sidePanel.open({ windowId: tabs[0].windowId })
   })
+
 
   res.send({
     message: "sidepanel opened"
