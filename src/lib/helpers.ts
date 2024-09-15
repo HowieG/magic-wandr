@@ -1,10 +1,13 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+
+
 import { Storage } from "@plasmohq/storage";
 
 
 
+import { Activity } from "../types"; // Make sure to import the Activity type
 
-
-const { GoogleGenerativeAI } = require("@google/generative-ai")
 
 export const localStorageInstance = new Storage({
   area: "local"
@@ -14,13 +17,56 @@ const genAI = new GoogleGenerativeAI(process.env.PLASMO_PUBLIC_GEMINI_API_KEY)
 
 const prompt_instructions = `
 I'm visiting San Francisco. I'm putting recommended stops on a google map.
-Please label each of the locations in these recommendations with one or multiple tags: scenic, entertainment, food, touristy, cultural.
-If the recommendation provides notes about the location include and provide an address for each if possible.
-Return the response in the exact JSON format as the example below.
-If you don't have any of the data just leave it
+Please give me a JSON object according to this schema:
 
-{ name: "Land's End", neighborhood: "Outer Richmond", category: "scenic", note: "Coastal trail with stunning ocean views", lat: 37.7850, lng: -122.5060, day: "Saturday", userNotes: ["Watch the sunset from the Sutro Baths ruins", "Hike the Coastal Trail for breathtaking views"], sources: ["sftravel.com", "nps.gov"] },
-	
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "neighborhood": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["cultural", "entertainment", "food", "scenic"]
+    },
+    "note": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "lat": {
+      "type": "number"
+    },
+    "lng": {
+      "type": "number"
+    },
+    "day": {
+      "type": "string",
+      "enum": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    }
+  },
+  "required": ["name", "neighborhood", "category", "note", "address", "lat", "lng", "day"],
+  "additionalProperties": false
+}
+
+where
+
+name is the name of the location
+neighborhood is the neighborhood of the location
+category is one of these type of locations: cultural, entertainment, food, scenic
+note is a short note about the location
+address is the address of the location
+lat is the latitude of the location
+lng is the longitude of the location
+day is the day of the week the text recommends to visit the location. If none, recommend one
+
+omit any code block markers. just return the JSON not the schema
+
 `
 
 export async function init() {
@@ -74,38 +120,68 @@ export async function addSelectedActivityToStorage(
   //   )
 }
 
-export async function processHighlightedText(text: string) {
+export async function processHighlightedText(text: string, url: string) {
   // Use gemini-pro model for text-only input
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-  // Shortened for legibility. See "Write an effective prompt" for
-  // writing an actual production-ready prompt.
-  const prompt = `${prompt_instructions}\n\n${text}`
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" })
+  const prompt = `${prompt_instructions}\n\n${text}`;
   const result = await model.generateContent(prompt);
   const response = await result.response;
   const response_text = response.text();
-  console.log(response_text)
-  return response_text;
+  console.log(response_text);
+
+  try {
+    const jsonResponse = JSON.parse(response_text);
+    const activity: Activity = {
+      name: jsonResponse.name,
+      neighborhood: jsonResponse.neighborhood,
+      category: jsonResponse.category,
+      note: jsonResponse.note,
+      address: jsonResponse.address,
+      lat: jsonResponse.lat,
+      lng: jsonResponse.lng,
+      day: jsonResponse.day,
+      // userNotes: jsonResponse.userNotes || [],
+      // sources: await getCurrentWindowUrl()
+      sources:
+        "https://www.holidify.com/places/san-francisco/sightseeing-and-things-to-do.html"
+    }
+
+    await addActivityToStorage(activity);
+    return activity;
+  } catch (error) {
+    console.error("Error parsing JSON or adding activity to storage:", error);
+    throw error;
+  }
 }
 
-export async function addActivityToStorage(oActivity: Activity, pending = false) {
-  let aoActivity: Activity[] = (await getActivitiesFromStorage()) || []
+// export async function addActivityToStorage(oActivity: Activity, pending = false) {
+//   let aoActivity: Activity[] = (await getActivitiesFromStorage()) || []
 
-  if (!aoActivity.some((p) => p.activity_url === oActivity.activity_url)) {
-    if (pending) {
-      // Add to beginning of activities array so that it appears as first thumbnail
-      aoActivity.unshift(oActivity)
-    } else {
-      aoActivity.push(oActivity)
-      await addSelectedActivityToStorage(oActivity.activity_url)
-      // console.log(
-      //   "Added activity ",
-      //   oActivity,
-      //   "to storage. New activities: ",
-      //   aoActivity
-      // )
-    }
-    await localStorageInstance.set("activities", aoActivity)
-  }
+//   if (!aoActivity.some((p) => p.activity_url === oActivity.activity_url)) {
+//     if (pending) {
+//       // Add to beginning of activities array so that it appears as first thumbnail
+//       aoActivity.unshift(oActivity)
+//     } else {
+//       aoActivity.push(oActivity)
+//       await addSelectedActivityToStorage(oActivity.activity_url)
+//       // console.log(
+//       //   "Added activity ",
+//       //   oActivity,
+//       //   "to storage. New activities: ",
+//       //   aoActivity
+//       // )
+//     }
+//     await localStorageInstance.set("activities", aoActivity)
+//   }
+// }
+
+export async function addActivityToStorage(
+  oActivity: Activity,
+  pending = false
+) {
+  let aoActivity: Activity[] = (await getActivitiesFromStorage()) || []
+  aoActivity.push(oActivity)
+  await localStorageInstance.set("activities", aoActivity)
 }
 
 export async function removeActivityFromStorage(activityUrl: ActivityUrl) {

@@ -39,6 +39,7 @@ const Highlight = () => {
 
 		const handleSelection = () => {
 			const selection = window.getSelection()
+			console.log("selection:", selection)
 			if (selection.toString().trim() !== "") {
 				const range = selection.getRangeAt(0)
 				setSelectedRange(range)

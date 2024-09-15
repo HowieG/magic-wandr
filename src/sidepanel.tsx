@@ -51,7 +51,7 @@ function IndexSidePanel() {
           }
         `}</style>
 				<div className="h-64">
-					<LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY}>
+					<LoadScript googleMapsApiKey={process.env.PLASMO_PUBLIC_GOOGLE_MAPS_API_KEY}>
 						<GoogleMap
 							mapContainerStyle={{ width: '100%', height: '100%' }}
 							center={{ lat: 37.7749, lng: -122.4194 }}
