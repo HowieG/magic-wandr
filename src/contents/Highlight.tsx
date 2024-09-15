@@ -35,11 +35,8 @@ const Highlight = () => {
 	const [selectedRange, setSelectedRange] = useState<Range | null>(null)
 
 	useEffect(() => {
-		console.log("activities", activities)
-
 		const handleSelection = () => {
 			const selection = window.getSelection()
-			console.log("selection:", selection)
 			if (selection.toString().trim() !== "") {
 				const range = selection.getRangeAt(0)
 				setSelectedRange(range)
@@ -60,18 +57,50 @@ const Highlight = () => {
 	}, [])
 
 	const handleButtonClick = () => {
-		processHighlightedText(selectedRange.toString())
+		if (selectedRange) {
+			highlightRange(selectedRange)
+			
+			// Process the highlighted text
+			const highlightedText = selectedRange.toString()
+			processHighlightedText(highlightedText)
+		}
+
 		sendToBackground({
 			name: "open-sidepanel"
 		})
 
-		if (selectedRange) {
-			const span = document.createElement("span")
-			span.style.backgroundColor = "rgba(128, 0, 128, 0.2)" // Light purple with opacity
-			selectedRange.surroundContents(span)
-		}
-
 		setShowButton(false)
+	}
+
+	// Add this function to your component
+	const highlightRange = (range: Range) => {
+		const newNode = document.createElement('span')
+		newNode.style.backgroundColor = "rgba(128, 0, 128, 0.2)" // Light purple with opacity
+		
+		const treeWalker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT)
+		const textNodes: Text[] = []
+		
+		while (treeWalker.nextNode()) {
+			const node = treeWalker.currentNode as Text
+			if (range.intersectsNode(node)) {
+				textNodes.push(node)
+			}
+		}
+		
+		textNodes.forEach(node => {
+			const intersectingRange = range.cloneRange()
+			intersectingRange.selectNodeContents(node)
+			
+			if (node === range.startContainer) {
+				intersectingRange.setStart(node, range.startOffset)
+			}
+			if (node === range.endContainer) {
+				intersectingRange.setEnd(node, range.endOffset)
+			}
+			
+			const highlightSpan = newNode.cloneNode() as HTMLSpanElement
+			intersectingRange.surroundContents(highlightSpan)
+		})
 	}
 
 	return showButton ? (
@@ -86,13 +115,13 @@ const Highlight = () => {
 				onClick={handleButtonClick}
 				style={{
 					padding: "5px 10px",
-					background: "#007bff",
+					background: "#887bff",
 					color: "white",
 					border: "none",
 					borderRadius: "4px",
 					cursor: "pointer"
 				}}>
-				Wandr
+				MagicWander
 			</button>
 		</div>
 	) : null

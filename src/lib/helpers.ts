@@ -70,6 +70,7 @@ omit any code block markers. just return the JSON not the schema
 `
 
 export async function init() {
+  localStorageInstance.set("activities", [])
   let activities: Activity[] | null =
     await localStorageInstance.get("activities")
   // if (!chatResponses || chatResponses.length === 0) {
@@ -120,9 +121,9 @@ export async function addSelectedActivityToStorage(
   //   )
 }
 
-export async function processHighlightedText(text: string, url: string) {
+export async function processHighlightedText(text: string) {
   // Use gemini-pro model for text-only input
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" })
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" })
   const prompt = `${prompt_instructions}\n\n${text}`;
   const result = await model.generateContent(prompt);
   const response = await result.response;
@@ -180,8 +181,14 @@ export async function addActivityToStorage(
   pending = false
 ) {
   let aoActivity: Activity[] = (await getActivitiesFromStorage()) || []
+    aoActivity.forEach((activity, index) => {
+      console.log(`Activity ${index + 1}:`, activity)
+    })
   aoActivity.push(oActivity)
   await localStorageInstance.set("activities", aoActivity)
+  aoActivity.forEach((activity, index) => {
+    console.log(`Activity ${index + 1}:`, activity)
+  })
 }
 
 export async function removeActivityFromStorage(activityUrl: ActivityUrl) {
