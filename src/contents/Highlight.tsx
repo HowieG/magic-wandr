@@ -184,9 +184,7 @@ window.addEventListener("mouseup", (event) => {
 
 			// Add click event to the button
 			button.addEventListener('click', () => {
-				let newNode = document.createElement('span');
-				newNode.style.backgroundColor = 'lightgray';
-				range.surroundContents(newNode);
+				highlightRange(range);
 				button.remove(); // Remove the button after highlighting
 			});
 
@@ -200,3 +198,33 @@ window.addEventListener("mouseup", (event) => {
 		}
 	}, 700); // delay to account for cancelling or triple clicking
 });
+
+function highlightRange(range: Range) {
+	const newNode = document.createElement('span');
+	newNode.style.backgroundColor = 'lightgray';
+
+	const treeWalker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
+	const textNodes: Text[] = [];
+
+	while (treeWalker.nextNode()) {
+		const node = treeWalker.currentNode as Text;
+		if (range.intersectsNode(node)) {
+			textNodes.push(node);
+		}
+	}
+
+	textNodes.forEach(node => {
+		const intersectingRange = range.cloneRange();
+		intersectingRange.selectNodeContents(node);
+
+		if (node === range.startContainer) {
+			intersectingRange.setStart(node, range.startOffset);
+		}
+		if (node === range.endContainer) {
+			intersectingRange.setEnd(node, range.endOffset);
+		}
+
+		const highlightSpan = newNode.cloneNode() as HTMLSpanElement;
+		intersectingRange.surroundContents(highlightSpan);
+	});
+}
