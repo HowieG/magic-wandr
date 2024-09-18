@@ -161,12 +161,37 @@ export const config: PlasmoCSConfig = {
 }
 
 window.addEventListener("mouseup", () => {
-	let selectedText = window.getSelection().toString();
-		console.log(selectedText)
+	setTimeout(() => {
+		let selection = window.getSelection();
+		let selectedText = selection.toString().trim();
+
 		if (selectedText.length > 0) {
-			let range = window.getSelection().getRangeAt(0);
-			let newNode = document.createElement('span');
-			newNode.style.backgroundColor = 'lightgray';
-			range.surroundContents(newNode);
+			let range = selection.getRangeAt(0);
+			let rect = range.getBoundingClientRect();
+
+			// Create and position the button
+			let button = document.createElement('button');
+			button.textContent = 'Add to Magic Wander';
+			button.style.position = 'absolute';
+			button.style.left = `${rect.left + window.scrollX - 150}px`; // Position to the left
+			button.style.top = `${rect.top + window.scrollY}px`;
+			button.style.zIndex = '9999';
+
+			// Add click event to the button
+			button.addEventListener('click', () => {
+				let newNode = document.createElement('span');
+				newNode.style.backgroundColor = 'lightgray';
+				range.surroundContents(newNode);
+				button.remove(); // Remove the button after highlighting
+			});
+
+			document.body.appendChild(button);
+
+			// Remove the button when the selection changes
+			document.addEventListener('selectionchange', function removeButton() {
+				button.remove();
+				document.removeEventListener('selectionchange', removeButton);
+			});
 		}
-})
+	}, 700); // delay to account for cancelling or triple clicking
+});
