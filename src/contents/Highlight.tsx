@@ -51,15 +51,21 @@ function handleSelection(event: MouseEvent) {
 
 			let button = document.createElement('button');
 			button.id = 'magic-wander-button';
-			const img = document.createElement('img');
-			img.src = magicWanderIcon;
-			img.style.width = '30px';
-			img.style.height = '30px';
-			button.appendChild(img);
 			button.style.position = 'absolute';
-			button.style.left = `${event.pageX - 40}px`;
-			button.style.top = `${event.pageY - 15}px`;
+			button.style.left = `${event.pageX - 25}px`; // Adjust based on half the button width
+			button.style.top = `${event.pageY - 25}px`;  // Adjust based on half the button height
 			button.style.zIndex = '9999';
+			button.style.width = '50px';
+			button.style.height = '50px';
+			button.style.border = 'none';
+			button.style.padding = '0';
+			button.style.cursor = 'pointer';
+			button.style.backgroundImage = `url(${magicWanderIcon})`;
+			button.style.backgroundSize = 'contain'; // Changed from 'cover' to 'contain'
+			button.style.backgroundPosition = 'center';
+			button.style.backgroundRepeat = 'no-repeat';
+			button.style.backgroundColor = 'transparent'; // Explicitly set transparent background
+			button.style.outline = 'none'; // Remove outline on focus
 
 			// Add click event to the button
 			button.addEventListener('click', (e) => {
