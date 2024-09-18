@@ -161,7 +161,7 @@ export const config: PlasmoCSConfig = {
 	matches: ["<all_urls>"]
 }
 
-window.addEventListener("mouseup", () => {
+window.addEventListener("mouseup", (event) => {
 	setTimeout(() => {
 		let selection = window.getSelection();
 		let selectedText = selection.toString().trim();
@@ -178,8 +178,8 @@ window.addEventListener("mouseup", () => {
 			img.style.height = '30px';
 			button.appendChild(img);
 			button.style.position = 'absolute';
-			button.style.left = `${rect.left + window.scrollX - 50}px`; // Position to the left
-			button.style.top = `${rect.top + window.scrollY + rect.height / 2 - button.offsetHeight / 2}px`;
+			button.style.left = `${event.pageX - 40}px`; // 40px to the left of the mouse
+			button.style.top = `${event.pageY - 15}px`; // Centered vertically with the mouse
 			button.style.zIndex = '9999';
 
 			// Add click event to the button
