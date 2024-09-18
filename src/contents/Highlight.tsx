@@ -20,7 +20,7 @@ export const config: PlasmoCSConfig = {
 }
 
 
-let activeButton: HTMLButtonElement | null = null;
+let activeButton: HTMLDivElement | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 
