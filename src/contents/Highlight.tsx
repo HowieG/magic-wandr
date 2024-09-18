@@ -23,39 +23,21 @@ export const config: PlasmoCSConfig = {
 let activeButton: HTMLButtonElement | null = null;
 
 function removeActiveButton() {
-	console.log("Attempting to remove active button");
-	
-	// Try to find the button in the DOM
 	const buttonInDOM = document.getElementById('magic-wander-button');
-	
 	if (buttonInDOM) {
-		console.log("Button found in DOM, removing...");
 		buttonInDOM.parentNode.removeChild(buttonInDOM);
-		console.log("Button removed from DOM");
-	} else {
-		console.log("Button not found in DOM");
 	}
-	
-	if (activeButton) {
-		console.log("Clearing activeButton reference");
-		activeButton = null;
-	} else {
-		console.log("activeButton was already null");
-	}
-	
-	// Double-check if the button is really gone
-	const buttonStillInDOM = document.getElementById('magic-wander-button');
-	console.log("Button still in DOM after removal attempt:", buttonStillInDOM);
+	activeButton = null;
 }
 
 // TODO: convert to Tailwind
 function handleSelection(event: MouseEvent) {
-	removeActiveButton();
+	// removeActiveButton();
 
 	// Skip if the target is our button
-	if ((event.target as HTMLElement).id === 'magic-wander-button') {
-		return;
-	}
+	// if ((event.target as HTMLElement).id === 'magic-wander-button') {
+	// 	return;
+	// }
 
 	setTimeout(() => {
 		let selection = window.getSelection();
@@ -78,8 +60,9 @@ function handleSelection(event: MouseEvent) {
 
 			// Add click event to the button
 			button.addEventListener('click', (e) => {
+				console.log("range: ", range);
 				highlightRange(range);
-				removeActiveButton();
+				// removeActiveButton();
 				sendToBackground({
 					name: "open-sidepanel"
 				});
@@ -100,43 +83,60 @@ window.addEventListener('mouseup', (event) => {
 
 // Remove the button when the selection changes
 window.addEventListener('selectionchange', () => {
-	setTimeout(removeActiveButton, 0);
+	// setTimeout(removeActiveButton, 0);
 });
 
 // Remove the button when clicking anywhere else on the page
 window.addEventListener('mousedown', (event) => {
-	console.log("Removing active button 1");
-	removeActiveButton();
+	// removeActiveButton();
 });
 
 function highlightRange(range: Range) {
 	const newNode = document.createElement('span');
 	newNode.style.backgroundColor = 'lightgray';
 
-	const treeWalker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
-	const textNodes: Text[] = [];
+	const processTextNode = (node: Text, start: number, end: number) => {
+		const nodeRange = document.createRange();
+		nodeRange.setStart(node, start);
+		nodeRange.setEnd(node, end);
+		const highlightSpan = newNode.cloneNode() as HTMLSpanElement;
+		nodeRange.surroundContents(highlightSpan);
+	};
 
-	while (treeWalker.nextNode()) {
-		const node = treeWalker.currentNode as Text;
-		if (range.intersectsNode(node)) {
-			textNodes.push(node);
+	const processNodeSpan = (node: HTMLElement, start: number, end: number) => {
+		const treeWalker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
+		const textNodes: Text[] = [];
+
+		while (treeWalker.nextNode()) {
+			const node = treeWalker.currentNode as Text;
+			if (range.intersectsNode(node)) {
+				textNodes.push(node);
+			}
 		}
+
+		textNodes.forEach(node => {
+			const intersectingRange = range.cloneRange();
+			intersectingRange.selectNodeContents(node);
+
+			if (node === range.startContainer) {
+				intersectingRange.setStart(node, range.startOffset);
+			}
+			if (node === range.endContainer) {
+				intersectingRange.setEnd(node, range.endOffset);
+			}
+
+			const highlightSpan = newNode.cloneNode() as HTMLSpanElement;
+			intersectingRange.surroundContents(highlightSpan);
+		});
 	}
 
-	textNodes.forEach(node => {
-		const intersectingRange = range.cloneRange();
-		intersectingRange.selectNodeContents(node);
-
-		if (node === range.startContainer) {
-			intersectingRange.setStart(node, range.startOffset);
-		}
-		if (node === range.endContainer) {
-			intersectingRange.setEnd(node, range.endOffset);
-		}
-
-		const highlightSpan = newNode.cloneNode() as HTMLSpanElement;
-		intersectingRange.surroundContents(highlightSpan);
-	});
+	if (range.commonAncestorContainer.nodeType === Node.TEXT_NODE) {
+		// Case 1: Selection within a single text node
+		processTextNode(range.commonAncestorContainer as Text, range.startOffset, range.endOffset);
+	} else {
+		// Case 2: Selection spans multiple nodes
+		processNodeSpan(range.commonAncestorContainer as HTMLElement, range.startOffset, range.endOffset);
+	}
 
 	// Clear the selection
 	if (window.getSelection) {
