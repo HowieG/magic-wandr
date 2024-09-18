@@ -26,7 +26,7 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 function removeActiveButton() {
 	if (activeButton) {
-		activeButton.parentNode.removeChild(activeButton);
+		activeButton.remove();
 	}
 	activeButton = null;
 }
@@ -49,36 +49,54 @@ function handleSelection(event: MouseEvent) {
 			console.log('handleSelection', selection);
 			let range = selection.getRangeAt(0);
 
-			let button = document.createElement('button');
+			// Create a container for the Shadow DOM
+			const container = document.createElement('div');
+			container.style.position = 'absolute';
+			container.style.left = `${event.pageX - 25}px`;
+			container.style.top = `${event.pageY - 25}px`;
+			container.style.zIndex = '9999';
+
+			// Create Shadow DOM
+			const shadow = container.attachShadow({ mode: 'closed' });
+
+			// Create button
+			const button = document.createElement('button');
 			button.id = 'magic-wander-button';
-			button.style.position = 'absolute';
-			button.style.left = `${event.pageX - 25}px`; // Adjust based on half the button width
-			button.style.top = `${event.pageY - 25}px`;  // Adjust based on half the button height
-			button.style.zIndex = '9999';
-			button.style.width = '50px';
-			button.style.height = '50px';
-			button.style.border = 'none';
-			button.style.padding = '0';
-			button.style.cursor = 'pointer';
-			button.style.backgroundImage = `url(${magicWanderIcon})`;
-			button.style.backgroundSize = 'contain'; // Changed from 'cover' to 'contain'
-			button.style.backgroundPosition = 'center';
-			button.style.backgroundRepeat = 'no-repeat';
-			button.style.backgroundColor = 'transparent'; // Explicitly set transparent background
-			button.style.outline = 'none'; // Remove outline on focus
+
+			// Apply styles
+			const style = document.createElement('style');
+			style.textContent = `
+			  button {
+			    width: 50px;
+			    height: 50px;
+			    border: none;
+			    padding: 0;
+			    cursor: pointer;
+			    background-image: url(${magicWanderIcon});
+			    background-size: contain;
+			    background-position: center;
+			    background-repeat: no-repeat;
+			    background-color: transparent;
+			    outline: none;
+			  }
+			`;
 
 			// Add click event to the button
 			button.addEventListener('click', (e) => {
 				removeActiveButton();
 				highlightRange(range);
-				// removeActiveButton();
 				sendToBackground({
 					name: "open-sidepanel"
 				});
 			});
 
-			document.body.appendChild(button);
-			activeButton = button;
+			// Append button and styles to Shadow DOM
+			shadow.appendChild(style);
+			shadow.appendChild(button);
+
+			// Append container to document body
+			document.body.appendChild(container);
+			activeButton = container;
 		} else {
 			removeActiveButton();
 		}
