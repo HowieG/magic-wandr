@@ -1,10 +1,8 @@
 import "~/src/style.css"
-
-
 import React from 'react'
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api'
 import { LinkIcon } from 'lucide-react'
-
+import mapImage from "data-base64:~/assets/map.png"
 
 // Note: You would need to replace 'YOUR_GOOGLE_MAPS_API_KEY' with an actual API key
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY
@@ -50,7 +48,7 @@ function IndexSidePanel() {
             100% { background-position: 0% 50%; }
           }
         `}</style>
-				<div className="h-64">
+				{/* <div className="h-64">
 					<LoadScript googleMapsApiKey={process.env.PLASMO_PUBLIC_GOOGLE_MAPS_API_KEY}>
 						<GoogleMap
 							mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -62,10 +60,23 @@ function IndexSidePanel() {
 							))}
 						</GoogleMap>
 					</LoadScript>
+				</div> */}
+				<div className="w-full h-64">
+					<img src={mapImage} alt="Map" className="object-cover w-full h-full" />
 				</div>
 				<div className="p-4">
 					<h2 className="text-2xl font-['Fredoka_One'] mb-1 text-white">Your trip to San Francisco, CA</h2>
 					<p className="mb-4 text-sm text-gray-300">Fri Sep 13 - Sun Sep 15</p>
+					{/* Add the legend here */}
+					<div className="flex flex-wrap gap-2 mb-4">
+						{Object.entries(categoryStyles).map(([category, style]) => (
+							<div key={category} className="flex items-center">
+								<div className={`w-3 h-3 mr-1 ${style.border.replace('border-l-[3px]', 'border-[3px]')} ${style.shadow} bg-${category}-500`}></div>
+								<span className="text-xs text-gray-300 capitalize">{category}</span>
+							</div>
+						))}
+					</div>
+
 					<ul className="space-y-4">
 						{touristSpots.map((spot, index) => (
 							<li key={index} className={`p-3 rounded-lg ${categoryStyles[spot.category].shadow} ${categoryStyles[spot.category].border} creative-gradient transition-all duration-300 ease-in-out hover:shadow-lg hover:translate-y-[-2px] hover:brightness-105`}>
