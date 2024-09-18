@@ -21,29 +21,32 @@ export const config: PlasmoCSConfig = {
 
 
 let activeButton: HTMLButtonElement | null = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 
 function removeActiveButton() {
-	const buttonInDOM = document.getElementById('magic-wander-button');
-	if (buttonInDOM) {
-		buttonInDOM.parentNode.removeChild(buttonInDOM);
+	if (activeButton) {
+		activeButton.parentNode.removeChild(activeButton);
 	}
 	activeButton = null;
 }
 
 // TODO: convert to Tailwind
 function handleSelection(event: MouseEvent) {
-	// removeActiveButton();
+	// Clear any existing timer
+	if (debounceTimer !== null) {
+		clearTimeout(debounceTimer);
+	}
 
-	// Skip if the target is our button
-	// if ((event.target as HTMLElement).id === 'magic-wander-button') {
-	// 	return;
-	// }
-
-	setTimeout(() => {
+	// Set a new timer
+	debounceTimer = setTimeout(() => {
+		console.log('handleSelection');
 		let selection = window.getSelection();
 		let selectedText = selection.toString().trim();
 
-		if (selectedText.length > 0) {
+		if (selectedText.length > 2) { // we expect a locale to have at least 3 characters
+			
+			console.log('handleSelection', selection);
 			let range = selection.getRangeAt(0);
 
 			let button = document.createElement('button');
@@ -60,7 +63,7 @@ function handleSelection(event: MouseEvent) {
 
 			// Add click event to the button
 			button.addEventListener('click', (e) => {
-				console.log("range: ", range);
+				removeActiveButton();
 				highlightRange(range);
 				// removeActiveButton();
 				sendToBackground({
@@ -70,20 +73,19 @@ function handleSelection(event: MouseEvent) {
 
 			document.body.appendChild(button);
 			activeButton = button;
+		} else {
+			removeActiveButton();
 		}
-	}, 700);
+	}, 500); // 500ms debounce delay
 }
 
-// Use mouseup event to trigger button creation
 window.addEventListener('mouseup', (event) => {
-	if ((event.target as HTMLElement).id !== 'magic-wander-button') {
-		handleSelection(event);
-	}
+	handleSelection(event);
 });
 
-// Remove the button when the selection changes
-window.addEventListener('selectionchange', () => {
-	// setTimeout(removeActiveButton, 0);
+// TODO: this is too frequent. Base it on mouse events? Should I account for non-mouse events?
+document.addEventListener('selectionchange', () => {
+	removeActiveButton();
 });
 
 // Remove the button when clicking anywhere else on the page
@@ -91,7 +93,10 @@ window.addEventListener('mousedown', (event) => {
 	// removeActiveButton();
 });
 
+
+// TODO: this doesn't work on nested reddit comments 
 function highlightRange(range: Range) {
+	console.log('highlightRange', range);
 	const newNode = document.createElement('span');
 	newNode.style.backgroundColor = 'lightgray';
 
@@ -103,7 +108,7 @@ function highlightRange(range: Range) {
 		nodeRange.surroundContents(highlightSpan);
 	};
 
-	const processNodeSpan = (node: HTMLElement, start: number, end: number) => {
+	const processNodeSpan = () => {
 		const treeWalker = document.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
 		const textNodes: Text[] = [];
 
@@ -134,8 +139,7 @@ function highlightRange(range: Range) {
 		// Case 1: Selection within a single text node
 		processTextNode(range.commonAncestorContainer as Text, range.startOffset, range.endOffset);
 	} else {
-		// Case 2: Selection spans multiple nodes
-		processNodeSpan(range.commonAncestorContainer as HTMLElement, range.startOffset, range.endOffset);
+		processNodeSpan();
 	}
 
 	// Clear the selection
