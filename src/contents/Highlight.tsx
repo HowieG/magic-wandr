@@ -84,15 +84,11 @@ window.addEventListener('mouseup', (event) => {
 });
 
 // TODO: this is too frequent. Base it on mouse events? Should I account for non-mouse events?
+// TODO: if I can get the mouse position, I can get rid of mouseup and just use selectionchange,
+// though I still want to make sure their mouse is up before calling handleSelection
 document.addEventListener('selectionchange', () => {
 	removeActiveButton();
 });
-
-// Remove the button when clicking anywhere else on the page
-window.addEventListener('mousedown', (event) => {
-	// removeActiveButton();
-});
-
 
 // TODO: this doesn't work on nested reddit comments 
 function highlightRange(range: Range) {
