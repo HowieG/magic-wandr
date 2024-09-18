@@ -155,9 +155,10 @@
 
 
 import type { PlasmoCSConfig } from "plasmo"
+import magicWanderIcon from "data-base64:~/assets/magic-wander-icon.png"
 
 export const config: PlasmoCSConfig = {
-	matches: ["https://www.reddit.com/*"]
+	matches: ["<all_urls>"]
 }
 
 window.addEventListener("mouseup", () => {
@@ -171,10 +172,14 @@ window.addEventListener("mouseup", () => {
 
 			// Create and position the button
 			let button = document.createElement('button');
-			button.textContent = 'Add to Magic Wander';
+			const img = document.createElement('img');
+			img.src = magicWanderIcon;
+			img.style.width = '30px';
+			img.style.height = '30px';
+			button.appendChild(img);
 			button.style.position = 'absolute';
-			button.style.left = `${rect.left + window.scrollX - 150}px`; // Position to the left
-			button.style.top = `${rect.top + window.scrollY}px`;
+			button.style.left = `${rect.left + window.scrollX - 50}px`; // Position to the left
+			button.style.top = `${rect.top + window.scrollY + rect.height / 2 - button.offsetHeight / 2}px`;
 			button.style.zIndex = '9999';
 
 			// Add click event to the button
