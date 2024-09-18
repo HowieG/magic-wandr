@@ -160,57 +160,13 @@ export const config: PlasmoCSConfig = {
 	matches: ["https://www.reddit.com/*"]
 }
 
-let tooltipButton = null;
-
-document.addEventListener('mouseup', function (event) {
+window.addEventListener("mouseup", () => {
 	let selectedText = window.getSelection().toString();
-	if (selectedText.length > 0) {
-		createTooltipButton(event.pageX, event.pageY);
-	} else {
-		removeTooltipButton();
-	}
-});
-
-function createTooltipButton(x, y) {
-	removeTooltipButton();
-
-	tooltipButton = document.createElement('button');
-	tooltipButton.textContent = 'Add to MagicWander';
-	tooltipButton.style.position = 'absolute';
-	tooltipButton.style.left = `${x - 150}px`;  // Position to the left of the selection
-	tooltipButton.style.top = `${y}px`;
-	tooltipButton.style.zIndex = '9999';
-	tooltipButton.style.padding = '5px 10px';
-	tooltipButton.style.borderRadius = '5px';
-	tooltipButton.style.backgroundColor = '#f0f0f0';
-	tooltipButton.style.border = '1px solid #ccc';
-	tooltipButton.style.cursor = 'pointer';
-
-	tooltipButton.addEventListener('click', highlightSelectedText);
-
-	document.body.appendChild(tooltipButton);
-}
-
-function removeTooltipButton() {
-	if (tooltipButton && tooltipButton.parentNode) {
-		tooltipButton.parentNode.removeChild(tooltipButton);
-	}
-}
-
-function highlightSelectedText() {
-	let selection = window.getSelection();
-	if (selection.rangeCount > 0) {
-		let range = selection.getRangeAt(0);
-		let newNode = document.createElement('span');
-		newNode.style.backgroundColor = 'lightgray';
-		range.surroundContents(newNode);
-	}
-	removeTooltipButton();
-}
-
-// Click event listener to remove the button when clicking outside
-document.addEventListener('click', function (event) {
-	if (tooltipButton && !tooltipButton.contains(event.target)) {
-		removeTooltipButton();
-	}
-});
+		console.log(selectedText)
+		if (selectedText.length > 0) {
+			let range = window.getSelection().getRangeAt(0);
+			let newNode = document.createElement('span');
+			newNode.style.backgroundColor = 'lightgray';
+			range.surroundContents(newNode);
+		}
+})
